@@ -9,12 +9,31 @@
  */
 
 var fs = require('fs');
+var request = require('request');
 var Promise = require('bluebird');
-
-
+var promisefs = Promise.promisify(fs.writeFile);
+var promiseHelper1 = require('./promiseConstructor');
+var promiseHelper2 = require('./promisification');
 
 var fetchProfileAndWriteToFile = function(readFilePath, writeFilePath) {
   // TODO
+  //get firstline which is username
+  return promiseHelper1.pluckFirstLineFromFileAsync(readFilePath)
+    .then(function(username) {
+    //then request API
+      return promiseHelper2.getGitHubProfileAsync(username);
+    })
+    .then(function(data) {
+      console.log(JSON.stringify(data));
+      //then write response
+      return promisefs(writeFilePath, JSON.stringify(data), (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
+      });
+    }); 
 };
 
 // Export these functions so we can test them
